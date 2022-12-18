@@ -6,7 +6,11 @@
 @inject IDataAccess _data
 @inject IConfiguration _config
 
-<h3>Treneriai</h3>
+<h3>Testing CRUD</h3>
+
+<button class="btn btn-primary" @onclick="InsertData">Insert</button>
+<button class="btn btn-warning" @onclick="UpdateData">Update</button>
+<button class="btn btn-danger" @onclick="DeleteData">Delete</button>
 
 @if (people == null)
 {
@@ -24,7 +28,36 @@ else
 
 @code {
     List<PersonModel> people;
-    
+
+    private async Task InsertData()
+    {
+        string sql = "insert into zmones (vardas, pavarde) values (@vardas, @pavarde);";
+
+        await _data.SaveData(sql, new { vardas = "justinas", pavarde = "justinauskas"}, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+    private async Task UpdateData()
+    {
+        string sql = "update zmones set vardas = @vardas where pavarde = @pavarde"; 
+
+        await _data.SaveData(sql, new { vardas = "jaunius", pavarde = "justinauskas" }, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+    private async Task DeleteData()
+    {
+        string sql = "delete from zmones where vardas = @vardas limit 1";
+
+        await _data.SaveData(sql, new { vardas = "jaunius"}, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+
+
     protected override async Task OnInitializedAsync()
     {
         string sql = "select * from zmones";

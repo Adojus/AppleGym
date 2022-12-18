@@ -1,16 +1,18 @@
 ﻿@page "/registruotis"
+@using DataLibrary
 @using BlazorServer.Models
-@inject IConfiguration _config
-@using Microsoft.Extensions.Configuration
-@using MySql.Data.MySqlClient;
 
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using MySql.Data.MySqlClient;
 
 <PageTitle>Registruotis</PageTitle>
 <h1>Registracijos Forma</h1>
 
-<p role="status">Current count: @currentCount</p>
-<p role="status">modelname: @model.vardas</p>
-<p role="status">model last name: @model.pavarde</p>
+@*<p role="status">modelname: @model.vardas</p>
+<p role="status">model last name: @model.pavarde</p>*@
 
 <EditForm Model="@model">
     <DataAnnotationsValidator />
@@ -36,7 +38,7 @@
     </div>
     <div>
         <label>Pašto Kodas</label>
-        <InputNumber @bind-Value="model.pastoKodas" class="form-control" />
+        <InputText @bind-Value="model.pastoKodas" class="form-control" />
     </div>
     <div>
         <label>Adresas</label>
@@ -48,7 +50,7 @@
     </div>
     <div>
         <label>Lytis</label>
-        <InputText @bind-Value="model.slapyvardis" class="form-control" />
+        <InputText @bind-Value="model.lytis" class="form-control" />
     </div>
     <button disabled="@loading" class="btn btn-primary" @onclick="RegisterNewUser">
         @if (loading) 
@@ -60,44 +62,87 @@
 </EditForm>
 
 @code {
-    //protected override async Task OnInitializedAsync()
+
+        private Naudotojas model = new Naudotojas();
+        bool loading = false;
+        
+        private async Task RegisterNewUser()
+        {
+            loading = true;
+
+            string sql = "INSERT INTO naudotojai (vardas, pavarde, elPastas, miestas, pastoKodas, adresas,"+
+                " slaptazodis, slapyvardis, lytis) VALUES('"
+                + model.vardas + "','"
+                + model.pavarde + "','"
+                + model.elPastas + "','"
+                + model.miestas + "','"
+                + model.pastoKodas + "','"
+                + model.adresas + "','"
+                + model.slaptazodis + "','"
+                + model.slapyvardis + "','"
+                + model.lytis + "');";
+                        //im retarded
+
+            await _data.SaveData(sql, new { }, _config.GetConnectionString("default"));
+
+            await OnInitializedAsync();
+        }
+
+
+
+        List<PersonModel> people;
+
+        protected override async Task OnInitializedAsync()
+        {
+            string sql = "select * from zmones";
+
+            people = await _data.LoadData<PersonModel, dynamic>(sql, new { vardas = "jaunius" }, _config.GetConnectionString("default"));
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+    //private Naudotojas model = new Naudotojas();
+
+    //private bool loading = false;
+    //private int currentCount = 0;
+    //private void RegisterNewUser()
     //{
-    //    string sql = "select * from zmones";
-    //    people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    //    loading = true;
+
+    //    string sql = "INSERT INTO naudotojai VALUES('"
+    //    + model.vardas + "','"
+    //    + model.pavarde + "','"
+    //    + model.elPastas + "','"
+    //    + model.miestas + "','"
+    //    + model.pastoKodas + "','"
+    //    + model.adresas + "','"
+    //    + model.slaptazodis + "','"
+    //    + model.slapyvardis + "','"
+    //    + DateTime.Today.ToString() + "','"
+    //    + model.lytis + "','"
+    //    + "naudotojas" + "','"
+    //    + 0.ToString() + "');";
+    //    //im retarded
+
+
+    //    MySqlConnection myconn = new MySqlConnection(_config.GetConnectionString("default"));
+    //    MySqlDataReader myreader;
+    //    var cmd = new MySqlCommand(sql, myconn);
+    //    myconn.Open();
+    //    myreader = cmd.ExecuteReader();
+
+
+    //    currentCount = currentCount + 1;
+    //    loading = false;
     //}
 
-    private Naudotojas model = new Naudotojas();
-
-    private bool loading = false;
-    private int currentCount = 0;
-    private void RegisterNewUser()
-    {
-        loading = true;
-
-        string sql = "INSERT INTO naudotojai VALUES('" 
-        + model.vardas + "','" 
-        + model.pavarde + "','" 
-        + model.elPastas + "','" 
-        + model.miestas + "','" 
-        + model.pastoKodas + "','" 
-        + model.adresas + "','" 
-        + model.slaptazodis + "','" 
-        + model.slapyvardis + "','" 
-        + DateTime.Today.ToString() + "','"
-        + model.lytis + "','" 
-        + "naudotojas" + "','" 
-        + 0.ToString() + "');";
-        //im retarded
-        
-        
-        MySqlConnection myconn = new MySqlConnection(_config.GetConnectionString("default"));
-        MySqlDataReader myreader;
-        var cmd = new MySqlCommand(sql, myconn);
-        myconn.Open();
-        myreader = cmd.ExecuteReader();
-
-
-        currentCount = currentCount + 1;
-        loading = false;
-    }
 }
