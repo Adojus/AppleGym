@@ -1,4 +1,8 @@
-﻿@inherits LayoutComponentBase
+﻿@using BlazorServer.Authentication
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
 
 <PageTitle>BlazorServer</PageTitle>
 
@@ -9,11 +13,42 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="prisijungti">Prisijungti</a>
-            <a href="registruotis">Registruotis</a>
-            <a href="naryste">Narystė</a>
-            <a href="profilis">Mano Profilis</a>
-            <a href="admin">Administratoriaus langas</a>
+            <AuthorizeView Roles="klientas, admin, treneris">
+                <Authorized>
+                    <a href="profilis">Mano Profilis</a>
+                    <a @onclick="Atsijungti" href="">atsijungti</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="prisijungti">Prisijungti</a>
+                    <a href="registruotis">Registruotis</a>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="klientas">
+                <a href="naryste">Narystė</a>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="admin">
+                <a href="admin">Administratoriaus langas</a>
+            </AuthorizeView>
+            
+            
+            
+            <!-- cia siaip sau pasiziuret ar veikia. rodo tsg some text, bus galima istrint arba pakeist kad butu more functional 
+            <AuthorizeView Roles="klientas">
+                <Authorized>
+                    prisijunges klientas
+                </Authorized>                
+                <NotAuthorized>
+                    neprisijunges
+                </NotAuthorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    prisijunges admin
+                </Authorized>                
+            </AuthorizeView>
+            -->
         </div>
 
         <article class="content px-4">
@@ -21,3 +56,15 @@
         </article>
     </main>
 </div>
+
+@code{
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private async Task Atsijungti()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        navManager.NavigateTo("/", true);
+    }
+}

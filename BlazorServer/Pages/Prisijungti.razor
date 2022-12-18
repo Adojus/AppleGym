@@ -1,16 +1,45 @@
 ﻿@page "/prisijungti"
+@using BlazorServer.Authentication
+@inject UserAccountService userAccountService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
 
 <PageTitle>Prisijungti</PageTitle>
 <h1>Log in homie</h1>
 
 El. paštas
-<input type="text" class="form-control" id="name"/>
+<input @bind="model.elPastas" type="text" class="form-control" id="name"/>
 Slaptažodis
-<input type="text" class="form-control" id="name"/>
+<input @bind="model.slaptazodis" type="text" class="form-control" id="name"/>
 
 <div class="form-check">
       <input type="checkbox" class="form-check-input" id="dropdownCheck">
       Prisiminti mane
 </div>
-<a class="btn btn-primary" href="" role="button">Prisijungti</a>
+<a class="btn btn-primary" href="" role="button" @onclick="Authenticate">Prisijungti</a>
 <a class="dropdown-item" href="registruotis">Neturi paskyros? Registruokis čia!</a>
+
+
+@code 
+{
+    private Naudotojas model = new Naudotojas();
+
+    private async Task Authenticate()
+    {
+        var userAccount = userAccountService.GetByUserName(model.elPastas);
+        if (userAccount == null || userAccount.Password != model.slaptazodis)
+        {
+            await js.InvokeVoidAsync("alert", "Invalid User Name or Password");
+            return;
+        }
+
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(new UserSession
+            {
+                UserName = userAccount.UserName,
+                Role = userAccount.Role
+            });
+        navManager.NavigateTo("/", true);
+    }
+}
