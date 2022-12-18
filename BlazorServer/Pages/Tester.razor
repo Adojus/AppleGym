@@ -1,0 +1,42 @@
+﻿@page "/tester"
+@using System.Net.Mail
+
+<PageTitle>tester</PageTitle>
+
+<h1>tester</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<button class="btn btn-primary" @onclick="SendEmail">Click me to send email</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+    private void SendEmail()
+    {
+        string _sender = "gusbep@ktu.lt";
+        string _password = "passwooord";
+
+        SmtpClient client = new SmtpClient("smtp-mail.outlook.com");
+
+        client.Port = 587;
+        client.DeliveryMethod = SmtpDeliveryMethod.Network;
+        client.UseDefaultCredentials = false;
+        System.Net.NetworkCredential credentials =
+                    new System.Net.NetworkCredential(_sender, _password);
+        client.EnableSsl = true;
+        client.Credentials = credentials;
+
+        MailMessage message = new MailMessage(_sender, "gusbep@ktu.lt");
+        message.Subject = "vienas du try";
+        message.Body = "keturi penki sesi";
+        client.Send(message);
+    }
+}

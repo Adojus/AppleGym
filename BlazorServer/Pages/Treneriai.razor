@@ -1,34 +1,33 @@
 ﻿@page "/treneriai"
 
-@using DataLibrary
-@using BlazorServer.Models
-@using Microsoft.Extensions.Configuration
-@inject IDataAccess _data
-@inject IConfiguration _config
+<PageTitle>Treniruočių sąrašas</PageTitle>
+<h1>Treniruočių sąrašas</h1>
+<div>
+    <div>
+        <div style='float:left; margin-right: 20px'>
+            <img src="https://i.imgur.com/MYWNNFu.jpeg" width="128" height="128" />
+        </div>
+        <div>        
+            <h4>Jonas Biliūnas</h4>
+            Bokso Treneris
+            <br />        
+            <a class="btn btn-primary" href="treniruotes" role="button">Žiūrėti treniruotes</a>
+            <a class="btn btn-primary" href="treniruotes_kurimas" role="button">Kurti treniruotę</a>
+        </div>
+    </div>
+    <br/><br/><br/>
 
-<h3>Treneriai</h3>
+    <div>
+        <div style='float:left; margin-right: 20px'>
+            <img src="https://i.imgur.com/PYIppA1.png" width="128" height="128" />
+        </div>
+        <div>        
+            <h4>Jonas Biliūnas</h4>
+            Aerobikos Treneris
+            <br />        
+            <a class="btn btn-primary" href="treniruotes" role="button">Žiūrėti treniruotes</a>
+            <a class="btn btn-primary" href="treniruotes_kurimas" role="button">Kurti treniruotę</a>
+        </div>
+    </div>
+</div>
 
-@if (people == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    @foreach (var p in people)
-    {
-        <p>
-        @p.vardas @p.pavarde
-        </p>
-    }
-}
-
-@code {
-    List<PersonModel> people;
-    
-    protected override async Task OnInitializedAsync()
-    {
-        string sql = "select * from zmones";
-
-        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
-    }
-}

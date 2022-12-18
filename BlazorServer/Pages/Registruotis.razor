@@ -1,0 +1,103 @@
+﻿@page "/registruotis"
+@using BlazorServer.Models
+@inject IConfiguration _config
+@using Microsoft.Extensions.Configuration
+@using MySql.Data.MySqlClient;
+
+
+<PageTitle>Registruotis</PageTitle>
+<h1>Registracijos Forma</h1>
+
+<p role="status">Current count: @currentCount</p>
+<p role="status">modelname: @model.vardas</p>
+<p role="status">model last name: @model.pavarde</p>
+
+<EditForm Model="@model">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Vardas</label>
+        <InputText @bind-Value="model.vardas" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Pavardė</label>
+        <InputText @bind-Value="model.pavarde" class="form-control" />
+    </div>
+    <div>
+        <label>El. paštas</label>
+        <InputText @bind-Value="model.elPastas" class="form-control" />
+    </div>
+    <div>
+        <label>Slaptažodis</label>
+        <InputText @bind-Value="model.slaptazodis" class="form-control" />
+    </div>
+    <div>
+        <label>Miestas</label>
+        <InputText @bind-Value="model.miestas" class="form-control" />
+    </div>
+    <div>
+        <label>Pašto Kodas</label>
+        <InputNumber @bind-Value="model.pastoKodas" class="form-control" />
+    </div>
+    <div>
+        <label>Adresas</label>
+        <InputText @bind-Value="model.adresas" class="form-control" />
+    </div>
+    <div>
+        <label>Slapyvardis</label>
+        <InputText @bind-Value="model.slapyvardis" class="form-control" />
+    </div>
+    <div>
+        <label>Lytis</label>
+        <InputText @bind-Value="model.slapyvardis" class="form-control" />
+    </div>
+    <button disabled="@loading" class="btn btn-primary" @onclick="RegisterNewUser">
+        @if (loading) 
+        {
+            <span class="spinner-border spinner-border-sm mr-1"></span>
+        }
+        Registruotis
+    </button>
+</EditForm>
+
+@code {
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    string sql = "select * from zmones";
+    //    people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    //}
+
+    private Naudotojas model = new Naudotojas();
+
+    private bool loading = false;
+    private int currentCount = 0;
+    private void RegisterNewUser()
+    {
+        loading = true;
+
+        string sql = "INSERT INTO naudotojai VALUES('" 
+        + model.vardas + "','" 
+        + model.pavarde + "','" 
+        + model.elPastas + "','" 
+        + model.miestas + "','" 
+        + model.pastoKodas + "','" 
+        + model.adresas + "','" 
+        + model.slaptazodis + "','" 
+        + model.slapyvardis + "','" 
+        + DateTime.Today.ToString() + "','"
+        + model.lytis + "','" 
+        + "naudotojas" + "','" 
+        + 0.ToString() + "');";
+        //im retarded
+        
+        
+        MySqlConnection myconn = new MySqlConnection(_config.GetConnectionString("default"));
+        MySqlDataReader myreader;
+        var cmd = new MySqlCommand(sql, myconn);
+        myconn.Open();
+        myreader = cmd.ExecuteReader();
+
+
+        currentCount = currentCount + 1;
+        loading = false;
+    }
+}
