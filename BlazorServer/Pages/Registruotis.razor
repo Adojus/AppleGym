@@ -50,8 +50,12 @@
     </div>
     <div>
         <label>Lytis</label>
-        <InputText @bind-Value="model.lytis" class="form-control" />
-    </div>
+        <InputSelect @bind-Value="model.lytis" class="form-select">
+            <option value="">pasirinkite lytį</option>
+            <option value="vyras">vyras</option>
+            <option value="moteris">moteris</option>
+        </InputSelect>
+    </div><br>
     <button disabled="@loading" class="btn btn-primary" @onclick="RegisterNewUser">
         @if (loading) 
         {
@@ -81,23 +85,24 @@
                 + model.slaptazodis + "','"
                 + model.slapyvardis + "','"
                 + model.lytis + "');";
-                        //im retarded
 
             await _data.SaveData(sql, new { }, _config.GetConnectionString("default"));
 
-            await OnInitializedAsync();
+            //await OnInitializedAsync();
+
+            loading = false;
         }
 
 
 
-        List<PersonModel> people;
+        //List<PersonModel> people;
 
-        protected override async Task OnInitializedAsync()
-        {
-            string sql = "select * from zmones";
+        //protected override async Task OnInitializedAsync()
+        //{
+        //    string sql = "select * from zmones";
 
-            people = await _data.LoadData<PersonModel, dynamic>(sql, new { vardas = "jaunius" }, _config.GetConnectionString("default"));
-        }
+        //    people = await _data.LoadData<PersonModel, dynamic>(sql, new { vardas = "jaunius" }, _config.GetConnectionString("default"));
+        //}
 
 
 
