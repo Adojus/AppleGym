@@ -1,50 +1,129 @@
 ﻿@page "/naryste"
 @using System.Net;
 @using System.Net.Mail
+@using BlazorServer.Authentication
+@using BlazorServer.Models
+@inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
 @inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using System.Security.Claims;
 
 <PageTitle>Mano Naryste</PageTitle>
 <h1>Mano Naryste</h1>
-Galioja iki: 2030-07-04
-<br/> Likęs laikas: 98798 dienų
+@if (naudotojas == null || klientas == null || naryste == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    switch(klientas[0].narioStatusas)
+    {
+        case 0:
+            <p>Jūs neturite narystės</p>
+            break;
+        case 1:
+            <p>Jūsų narystė galioja iki @naryste[0].galiojaIki</p>
+            break;
+        case 2:
+            <p>Jūsų narystė šiuo metu nutraukta</p>
+            break;
+        default:
+            <p>Jūs neturite narystės</p>
+            break;
+    }
+}
+<br/> 
 <br/> 
 <br/>
 
 
 <h3>Įsigyti narystę</h3>
-<input type="text" class="form-control" placeholder="Vardas"/>
-<input type="text" class="form-control" placeholder="Pavardė"/>
-<input type="text" class="form-control" placeholder="Kortelės nr"/>
-<input type="text" class="form-control" placeholder="cvv"/>
-<input type="text" class="form-control" placeholder="Galioja iki"/>
-<input type="text" class="form-control" placeholder="Mėnesių kiekis (15 eur/mėn)"/>
-<button class="btn btn-primary" href="">Pirkti</button>
+<button @onclick="ToggleIsigyti" class="btn btn-secondary">Rodyti</button>
+<div hidden="@hideIsigyti">
+    <input type="text" class="form-control" placeholder="Vardas"/>
+    <input type="text" class="form-control" placeholder="Pavardė"/>
+    <input type="text" class="form-control" placeholder="Kortelės nr"/>
+    <input type="text" class="form-control" placeholder="cvv"/>
+    <label>Galioja iki</label>
+    <input @bind="menesiuKiekis" type="date" class="form-control" />
+    <button class="btn btn-primary" href="" @onclick="BuyMembership">Pirkti</button>
+</div>
 <br/>
 <br/>
 
-<h3>Lojalumas</h3>
-Naryste džiaugiates jau <b>6 mėnesius, 4 dienas</b><br/>
-Sekančiam mokėjimui bus pritaikyta <b>8%</b> nuolaida<br/>
-<br/>
-Kviesti draugą: <input @bind="recipient" type="text" class="form-control" placeholder="ISPlaboras@outlook.com"/>
-<button class="btn btn-primary" href="" @onclick="SendEmail">Kviesti</button>
-Pakviestų draugų kiekis: <b>5</b><br/>
-Jums priklauso <b>45 dienos</b> nemokamos narystės
+
+
+
+
+<h3>Lojalumas/Kviesti Draugą</h3>
+<button @onclick="ToggleLojalumas" class="btn btn-secondary">Rodyti</button>
+<div hidden="@hideLojalumas">
+    Jūsų lojalumo lygis: <b> @if (klientas != null) { <p>@klientas[0].pazangosLygis</p> }</b>
+    Kviesti draugą: <input @bind="recipient" type="text" class="form-control" placeholder="ISPlaboras@outlook.com"/>
+    <button class="btn btn-primary" href="" @onclick="SendEmail">Kviesti</button>
+    Pakviestų draugų kiekis: <b>5</b><br/>
+</div>
 <br/>
 <br/>
 
 <h3>Pertraukti narystę</h3>
-<input type="text" class="form-control" id="kiekis" placeholder="Stabdomų dienų kiekis"/>
-<button class="btn btn-warning" href="">Pertraukti</button>
+<button @onclick="TogglePertraukti" class="btn btn-secondary">Rodyti</button>
+<div hidden="@hidePertraukti"> 
+    <input type="text" class="form-control" id="kiekis" placeholder="Stabdomų dienų kiekis"/>
+    <button class="btn btn-warning" href="" @onclick="Pertraukti">Pertraukti</button>
+</div>
 <br/>
 <br/>
 
 <h3>Nutraukti narystę</h3>
-<input type="text" class="form-control" placeholder="Priežastis"/>
-<button class="btn btn-danger" href="" role="button">Nutraukti</button>
-
+<button @onclick="ToggleNutraukti" class="btn btn-secondary">Rodyti</button>
+<div hidden="@hideNutraukti"> 
+    <input type="text" class="form-control" placeholder="Priežastis"/>
+    <button class="btn btn-danger" href="" role="button" @onclick="Nutraukti">Nutraukti</button>
+</div>
 @code
 {
+    public UserAccount user = new UserAccount();
+    public List<Naudotojas> naudotojas;
+    List<Klientas> klientas;
+    List<Narystes> naryste;
+
+    DateTime menesiuKiekis = DateTime.Parse("2023-1-23");
+    private bool hideIsigyti = true;
+    private void ToggleIsigyti()
+    {
+        hideIsigyti = !hideIsigyti;
+    }
+
+    private bool hideNutraukti = true;
+    private void ToggleNutraukti()
+    {
+        hideNutraukti = !hideNutraukti;
+    }
+
+    private bool hideLojalumas = true;
+    private void ToggleLojalumas()
+    {
+        hideLojalumas = !hideLojalumas;
+    }
+
+    private bool hidePertraukti = true;
+    private void TogglePertraukti()
+    {
+        hidePertraukti = !hidePertraukti;
+    }
+
+
     string recipient = "";
     private void SendEmail()
     {
@@ -66,5 +145,75 @@ Jums priklauso <b>45 dienos</b> nemokamos narystės
         message.Body = "Jūs esate Pakviestas į AppleGym. Prisiregistravus su šiuo el. paštu Jūs ir Jūsų draugas gausite 20% nuolaidą sekančiam pirkimui!";
         client.Send(message);
         js.InvokeVoidAsync("alert", "Sėkmingai išsiųstas pranešimas");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetSessionUser();
+            string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+            naudotojas = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password }, _config.GetConnectionString("default"));
+
+            sql = "select * from klientai where fk_Naudotojaiid = @id limit 1";
+            klientas = await _data.LoadData<Klientas, dynamic>(sql, new { id = naudotojas[0].id }, _config.GetConnectionString("default"));
+
+            sql = "select * from narystes where fk_Klientaiid = @id limit 1";
+            naryste = await _data.LoadData<Narystes, dynamic>(sql, new { id = klientas[0].id }, _config.GetConnectionString("default"));
+            StateHasChanged();
+        }
+    }
+
+
+    public async Task GetSessionUser()
+    {
+        user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
+    }
+
+    private async Task BuyMembership()
+    {
+        // pakeisti kliento nario statusa i 1
+        string sql = "update klientai set narioStatusas = '1' where fk_Naudotojaiid = @id"; 
+
+        await _data.SaveData(sql, new { id = naudotojas[0].id }, _config.GetConnectionString("default"));
+
+        // prideti naryste
+        sql = "insert into narystes (galiojaIki, fk_Klientaiid) values (@galiojaiki, @id);";
+        await _data.SaveData(sql, new { galiojaiki = menesiuKiekis, id = klientas[0].id}, _config.GetConnectionString("default"));
+
+        js.InvokeVoidAsync("alert", "Sėkmingai nusipirkta narystė!");
+        navManager.NavigateTo("/naryste", true);
+    }
+
+    private async Task Nutraukti()
+    {
+        bool confirmed = await js.InvokeAsync<bool>("confirm", "Ar esate įsitikinę?");
+        if (confirmed)
+        {
+            // pakeisti kliento nario statusa i 0
+            string sql = "update klientai set narioStatusas = '0' where fk_Naudotojaiid = @id";
+            await _data.SaveData(sql, new { id = naudotojas[0].id }, _config.GetConnectionString("default"));
+
+            // istrinti naryste
+            sql = "delete from narystes where fk_Klientaiid = @id limit 1";
+            await _data.SaveData(sql, new { id = klientas[0].id }, _config.GetConnectionString("default"));
+
+            js.InvokeVoidAsync("alert", "Sėkmingai nutraukta narystė!");
+            navManager.NavigateTo("/naryste", true);
+        }
+    }
+
+    private async Task Pertraukti()
+    {
+        bool confirmed = await js.InvokeAsync<bool>("confirm", "Ar esate įsitikinę?");
+        if (confirmed)
+        {
+            // pakeisti kliento nario statusa i 2
+            string sql = "update klientai set narioStatusas = '2' where fk_Naudotojaiid = @id";
+            await _data.SaveData(sql, new { id = naudotojas[0].id }, _config.GetConnectionString("default"));
+
+            js.InvokeVoidAsync("alert", "Sėkmingai pertraukta narystė!");
+            navManager.NavigateTo("/naryste", true);
+        }
     }
 }
