@@ -1,84 +1,94 @@
 ﻿@page "/naujienos_salinimas"
 @attribute [Authorize(Roles = "administratorius")]
-@using DataLibrary
-@using BlazorServer.Models
-@using Microsoft.Extensions.Configuration
-@inject IDataAccess _data
-@inject IConfiguration _config
-
-
 @using BlazorServer.Authentication
+@using BlazorServer.Models
 @inject UserAccountService userAccountService
-@inject Blazored.SessionStorage.ISessionStorageService _currentSession
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
 
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+<PageTitle>Valdyti Naujienas</PageTitle>
+<h1>Šalinti Naujienas</h1>
 
-<PageTitle>Šalinti naujieną</PageTitle>
-<h1>Šalinti naujieną</h1>
+@if (naudotojai == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <label>Šalinamos naujienos ID:</label>
+    <input @bind="salinamasis.id" type="text" class="form-control" id="name" />
+    <td><a class="btn btn-danger" role="button" @onclick="RemoveUser">Šalinti</a></td>
 
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Naujiena</th>
-      <th scope="col"></th>
-    </tr>
-  </thead>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">ID</th>
+                <th scope="col">Data</th>
+                <th scope="col">Tekstas</th>
+                <th scope="col">Antraštė</th>
+                <th scope="col">Administratoriaus ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int i = 1;
+            }
+            @foreach (var p in naudotojai)
+            {
 
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Gruodžio 12d. nedirbsime</td>
-      <td>
-          <a class="btn btn-danger" href="naujienos_salinimas" role="button">Šalinti</a>
-      </td>
-    </tr>
-
-    <tr>
-      <th scope="row">2</th>
-      <td>Iki 50% nuolaida nuo...</td>
-      <td>
-          <a class="btn btn-danger" href="naujienos_salinimas" role="button">Šalinti</a>
-      </td>
-    </tr>
-
-    <tr>
-      <th scope="row">3</th>
-      <td>Naujos aerobikos treniruotės</td>
-      <td>
-          <a class="btn btn-danger" href="naujienos_salinimas" role="button">Šalinti</a>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-
-<br/>
+                <tr>
+                    <th scope="row">@i</th>
+                    <td>@p.id</td>
+                    <td>@p.data</td>
+                    <td>@p.tekstas</td>
+                    <td>@p.antraste</td>
+                    <td>@p.fk_Administratoriaiid</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+}
 <a class="btn btn-primary" href="admin" role="button">Atgal</a>
 
-
 @code {
+    List<NaujienaModel> naudotojai = new List<NaujienaModel>();
 
-    List<PersonModel> people;
-
-
-    private async Task DeleteData()
-    {
-        string sql = "delete from zmones where vardas = @vardas limit 1";
-
-        await _data.SaveData(sql, new { vardas = "jaunius" }, _config.GetConnectionString("default"));
-
-        await OnInitializedAsync();
-    }
-
-
-
+    NaujienaModel salinamasis = new NaujienaModel();
+    List<NaujienaModel> tikrinamasSalinamasis;
     protected override async Task OnInitializedAsync()
     {
-        string sql = "select * from zmones";
+        string sql = "select * from naujienos";
 
-        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        naudotojai = await _data.LoadData<NaujienaModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+
+    private async Task RemoveUser()
+    {
+        string sql = "select * from naujienos where id  = @id limit 1";
+
+        tikrinamasSalinamasis = await _data.LoadData<NaujienaModel, dynamic>(sql, new { id = salinamasis.id }, _config.GetConnectionString("default"));
+
+        if (tikrinamasSalinamasis.Count() < 1)
+        {
+            js.InvokeVoidAsync("alert", "Neteisingai įvesti duomenys");
+        }
+        else
+        {
+            sql = "delete from naujienos where id = @id limit 1";
+
+            await _data.SaveData(sql, new { id = salinamasis.id }, _config.GetConnectionString("default"));
+
+            js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
+
+            navManager.NavigateTo("/naujienos_salinimas", true);
+        }
+
     }
 }
