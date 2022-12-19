@@ -1,11 +1,122 @@
 ﻿@page "/profilio_redagavimas"
+@using BlazorServer.Authentication
+@using BlazorServer.Models
+@inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using System.Security.Claims;
 
 <PageTitle>Profilio Redagavimas</PageTitle>
 <h1>Profilio Redagavimas</h1>
 
-Vardas: manovardas
-<br />
-Pavardė: manopavarde
-<br />
+<EditForm Model="@model" OnValidSubmit="@EditUser" OnInvalidSubmit="@InvalidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary/>
+    <div class="form-group">
+        <label>Vardas</label>
+        <InputText @bind-Value="model.vardas" class="form-control" />
 
-<a class="btn btn-primary" href="profilis" role="button">Redaguoti profili</a>
+    </div>
+    <div class="form-group">
+        <label>Pavardė</label>
+        <InputText @bind-Value="model.pavarde" class="form-control" />
+    </div>
+    <div>
+        <label>El. paštas</label>
+        <InputText @bind-Value="model.elPastas" class="form-control" />
+    </div>
+    <div>
+        <label>Slaptažodis</label>
+        <InputText @bind-Value="model.slaptazodis" class="form-control" />
+    </div>
+    <div>
+        <label>Miestas</label>
+        <InputText @bind-Value="model.miestas" class="form-control" />
+    </div>
+    <div>
+        <label>Pašto Kodas</label>
+        <InputText @bind-Value="model.pastoKodas" class="form-control" />
+    </div>
+    <div>
+        <label>Adresas</label>
+        <InputText @bind-Value="model.adresas" class="form-control" />
+    </div>
+    <div>
+        <label>Slapyvardis</label>
+        <InputText @bind-Value="model.slapyvardis" class="form-control" />
+    </div>
+    <div>
+        <label>Lytis</label>
+        <InputSelect @bind-Value="model.lytis" class="form-select" required="required">
+            <option value="">pasirinkite lytį</option>
+            <option value="vyras">vyras</option>
+            <option value="moteris">moteris</option>
+        </InputSelect>
+    </div><br>
+    <button disabled="@loading" class="btn btn-warning" type="submit">
+        @if (loading) 
+        {
+            <span class="spinner-border spinner-border-sm mr-1"></span>
+        }
+        Redaguoti profili
+    </button>
+</EditForm>
+<a class="btn btn-primary" href="profilis" role="button">Atgal</a>
+
+@code
+{
+    bool loading = false;
+    public UserAccount user = new UserAccount();
+    public List<Naudotojas> people;
+    public Naudotojas model = new Naudotojas();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSessionUser();   
+        string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+
+        people = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
+        model = people[0];
+    }
+
+
+    public async Task GetSessionUser()
+    {
+        user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
+    }
+
+    public void ClearSession()
+    {
+        _currentSession.ClearAsync();
+        user = new UserAccount();
+    }
+
+    public async Task EditUser()
+    {
+        loading = true;
+        string sql = "update naudotojai set vardas = @vardas, pavarde = @pavarde, elPastas = @elPastas, miestas = @miestas, pastoKodas = @pastoKodas, adresas = @adresas, slaptazodis = @slaptazodis, slapyvardis = @slapyvardis, lytis = @lytis where slapyvardis = @sessionslapyvardis AND slaptazodis = @sessionslaptazodis"; 
+
+        await _data.SaveData(sql, new { vardas = model.vardas, pavarde = model.pavarde, elPastas = model.elPastas, miestas = model.miestas, pastoKodas = model.pastoKodas, adresas = model.adresas, slaptazodis = model.slaptazodis, slapyvardis = model.slapyvardis, lytis = model.lytis, sessionslapyvardis = user.UserName, sessionslaptazodis = user.Password }, _config.GetConnectionString("default"));
+
+        
+
+        await js.InvokeVoidAsync("alert", "Sėkmingai pakeisti duomenys");
+        loading = false;
+        navManager.NavigateTo("/", true);
+    }
+
+    private async Task InvalidSubmit()
+    {
+        await js.InvokeVoidAsync("alert", "Neteisingi duomenys!");
+    }
+}
