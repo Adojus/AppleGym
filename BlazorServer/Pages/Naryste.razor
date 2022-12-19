@@ -1,4 +1,7 @@
 ﻿@page "/naryste"
+@using System.Net;
+@using System.Net.Mail
+@inject IJSRuntime js
 
 <PageTitle>Mano Naryste</PageTitle>
 <h1>Mano Naryste</h1>
@@ -23,8 +26,8 @@ Galioja iki: 2030-07-04
 Naryste džiaugiates jau <b>6 mėnesius, 4 dienas</b><br/>
 Sekančiam mokėjimui bus pritaikyta <b>8%</b> nuolaida<br/>
 <br/>
-Kviesti draugą: <input type="text" class="form-control" placeholder="El. paštas"/>
-<button class="btn btn-primary" href="">Kviesti</button>
+Kviesti draugą: <input @bind="recipient" type="text" class="form-control" placeholder="ISPlaboras@outlook.com"/>
+<button class="btn btn-primary" href="" @onclick="SendEmail">Kviesti</button>
 Pakviestų draugų kiekis: <b>5</b><br/>
 Jums priklauso <b>45 dienos</b> nemokamos narystės
 <br/>
@@ -39,3 +42,29 @@ Jums priklauso <b>45 dienos</b> nemokamos narystės
 <h3>Nutraukti narystę</h3>
 <input type="text" class="form-control" placeholder="Priežastis"/>
 <button class="btn btn-danger" href="" role="button">Nutraukti</button>
+
+@code
+{
+    string recipient = "";
+    private void SendEmail()
+    {
+        string _sender = "ISPlaboras@outlook.com";
+        string _password = "I1S2P3Laboras";
+
+        SmtpClient client = new SmtpClient("smtp-mail.outlook.com");
+
+        client.Port = 587;
+        client.DeliveryMethod = SmtpDeliveryMethod.Network;
+        client.UseDefaultCredentials = false;
+        System.Net.NetworkCredential credentials =
+                    new System.Net.NetworkCredential(_sender, _password);
+        client.EnableSsl = true;
+        client.Credentials = credentials;
+
+        MailMessage message = new MailMessage(_sender, recipient);
+        message.Subject = "Pakvietimas į AppleGym";
+        message.Body = "Jūs esate Pakviestas į AppleGym. Prisiregistravus su šiuo el. paštu Jūs ir Jūsų draugas gausite 20% nuolaidą sekančiam pirkimui!";
+        client.Send(message);
+        js.InvokeVoidAsync("alert", "Sėkmingai išsiųstas pranešimas");
+    }
+}
