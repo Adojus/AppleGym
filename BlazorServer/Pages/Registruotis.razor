@@ -4,6 +4,7 @@
 
 @inject IDataAccess _data
 @inject IConfiguration _config
+@inject NavigationManager navManager
 
 
 @using MySql.Data.MySqlClient;
@@ -91,6 +92,7 @@
             //await OnInitializedAsync();
 
             loading = false;
+            navManager.NavigateTo("/prisijungti", true);
         }
 
 

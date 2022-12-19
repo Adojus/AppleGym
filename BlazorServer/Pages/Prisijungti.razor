@@ -1,15 +1,21 @@
 ﻿@page "/prisijungti"
 @using BlazorServer.Authentication
+@using BlazorServer.Models
 @inject UserAccountService userAccountService
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
 
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
 <PageTitle>Prisijungti</PageTitle>
 <h1>Log in homie</h1>
 
-El. paštas
-<input @bind="model.elPastas" type="text" class="form-control" id="name"/>
+Slapyvardis
+<input @bind="model.slapyvardis" type="text" class="form-control" id="name"/>
 Slaptažodis
 <input @bind="model.slaptazodis" type="text" class="form-control" id="name"/>
 
@@ -24,22 +30,41 @@ Slaptažodis
 @code 
 {
     private Naudotojas model = new Naudotojas();
+    List<Naudotojas> naudotojas;
 
     private async Task Authenticate()
     {
-        var userAccount = userAccountService.GetByUserName(model.elPastas);
-        if (userAccount == null || userAccount.Password != model.slaptazodis)
+        await CheckUserInDatabase();
+
+        if ( naudotojas.Count()<1)
         {
             await js.InvokeVoidAsync("alert", "Invalid User Name or Password");
             return;
         }
 
+        Naudotojas rastasNaudotojas = new Naudotojas();
+        rastasNaudotojas = naudotojas.First();
+
         var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+
         await customAuthStateProvider.UpdateAuthenticationState(new UserSession
-            {
-                UserName = userAccount.UserName,
-                Role = userAccount.Role
-            });
-        navManager.NavigateTo("/", true);
+        {
+            UserName = rastasNaudotojas.slapyvardis,
+            Role = rastasNaudotojas.role
+        });
+
+        if (rastasNaudotojas.role == "klientas")
+            navManager.NavigateTo("/", true);
+        else if (rastasNaudotojas.role == "administratorius")
+        navManager.NavigateTo("/admin", true);
+        else if (rastasNaudotojas.role == "treneris")
+            navManager.NavigateTo("/treneris", true);
+    }
+
+    protected async Task CheckUserInDatabase()
+    {
+        string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+
+        naudotojas = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = model.slapyvardis, slaptazodis = model.slaptazodis }, _config.GetConnectionString("default"));
     }
 }
