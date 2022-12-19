@@ -1,5 +1,11 @@
 ﻿@page "/"
 
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+
 <PageTitle>AppleGym</PageTitle>
 
 <h1>AppleGym - Tavo sporto klubas!</h1>
@@ -16,6 +22,47 @@
 
 <br />
 <h3>Naujienos</h3>
+
+
+@if (naujienos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">ID</th>
+                <th scope="col">Data</th>
+                <th scope="col">Tekstas</th>
+                <th scope="col">Antraštė</th>
+                <th scope="col">Administratoriaus ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int i = 1;
+            }
+            @foreach (var p in naujienos)
+            {
+
+                <tr>
+                    <th scope="row">@i</th>
+                    <td>@p.id</td>
+                    <td>@p.data</td>
+                    <td>@p.tekstas</td>
+                    <td>@p.antraste</td>
+                    <td>@p.fk_Administratoriaiid</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+}
+
+
 <div>
     <nav class="flex-column">
         <div class="nav-item px-3">
@@ -52,3 +99,15 @@
 
 <h3>Treniruotės</h3>
 <a class="btn btn-primary" href="treneriai" role="button">Žiūrėti Trenerius</a>
+
+
+@code{
+    List<NaujienaModel> naujienos; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from naujienos";
+
+        naujienos = await _data.LoadData<NaujienaModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+}
