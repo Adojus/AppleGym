@@ -1,3 +1,4 @@
+using Blazored.SessionStorage;
 using BlazorServer.Authentication;
 using BlazorServer.Data;
 using DataLibrary;
@@ -17,6 +18,7 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddSingleton<UserAccountService>();
 builder.Services.AddSingleton<IDataAccess, DataAccess>();
+builder.Services.AddBlazoredSessionStorage();
 
 var app = builder.Build();
 

@@ -2,22 +2,60 @@
 @using BlazorServer.Authentication
 @using BlazorServer.Models
 @inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using System.Security.Claims;
 
 <PageTitle>Mano Profilis</PageTitle>
 <h1>Mano Profilis</h1>
 
-Vardas: manovardas
-<br />
-Pavardė: manopavarde
-<br />
+@if (user == null)
+{
+    <p>Loading...</p>
+}
+else {
+<p>Slapyvardis:</p>
+<p>@user.UserName</p>
+<p>Slaptažodis:</p>
+<p>@user.Password</p>
+<p>Rolė:</p>
+<p>@user.Role</p>
+
+}
 
 <a class="btn btn-primary" href="profilio_redagavimas" role="button">Redaguoti profili</a>
 <br />
 <a class="btn btn-danger" href="#" role="button">Pašalinti paskyrą</a>
+<a class="btn btn-primary" role="button" @onclick="GetSessionUser">Matyti duomenis</a>
 
 @code
 {
+    public UserAccount user = new UserAccount();
 
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSessionUser();
+    }
+    public async Task GetSessionUser()
+    {
+        user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
+    }
+
+    public void ClearSession()
+    {
+        _currentSession.ClearAsync();
+        user = new UserAccount();
+    }
 
 
 }

@@ -5,6 +5,7 @@
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
 
 @using DataLibrary
 @inject IDataAccess _data
@@ -53,6 +54,8 @@ Slaptažodis
             Role = rastasNaudotojas.role
         });
 
+        SetSessionUser(rastasNaudotojas);
+
         if (rastasNaudotojas.role == "klientas")
             navManager.NavigateTo("/", true);
         else if (rastasNaudotojas.role == "administratorius")
@@ -66,5 +69,15 @@ Slaptažodis
         string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
 
         naudotojas = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = model.slapyvardis, slaptazodis = model.slaptazodis }, _config.GetConnectionString("default"));
+    }
+
+    public void SetSessionUser(Naudotojas rastasNaudotojas)
+    {
+        var user = new UserAccount();
+        user.UserName = rastasNaudotojas.slapyvardis;
+        user.Password = rastasNaudotojas.slaptazodis;
+        user.Role = rastasNaudotojas.role;
+
+        _currentSession.SetItemAsync("SessionUser", user);
     }
 }

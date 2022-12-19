@@ -4,7 +4,7 @@
 @inject NavigationManager navManager
 
 
-<PageTitle>BlazorServer</PageTitle>
+<PageTitle>Apple Gym</PageTitle>
 
 <div class="page">
     <div class="sidebar">
@@ -13,7 +13,7 @@
 
     <main>
         <div class="top-row px-4">
-            <AuthorizeView Roles="klientas, admin, treneris">
+            <AuthorizeView Roles="klientas, administratorius, treneris">
                 <Authorized>
                     <a href="profilis">Mano Profilis</a>
                     <a @onclick="Atsijungti" href="">atsijungti</a>
@@ -28,7 +28,7 @@
                 <a href="naryste">Narystė</a>
             </AuthorizeView>
 
-            <AuthorizeView Roles="admin">
+            <AuthorizeView Roles="administratorius">
                 <a href="admin">Administratoriaus langas</a>
             </AuthorizeView>
             

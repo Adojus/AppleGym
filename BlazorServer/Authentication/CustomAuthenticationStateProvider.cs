@@ -53,5 +53,6 @@ namespace BlazorServer.Authentication
             }
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
+
     }
 }
