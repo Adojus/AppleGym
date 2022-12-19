@@ -3,6 +3,17 @@
 <PageTitle>AppleGym</PageTitle>
 
 <h1>AppleGym - Tavo sporto klubas!</h1>
+<AuthorizeView Roles="klientas, treneris, administratorius">
+    <NavLink class="nav-link" href="profilis">
+        <span class="oi oi-clock" aria-hidden="true"></span> Profilis
+    </NavLink>
+</AuthorizeView>
+<AuthorizeView Roles="klientas">
+    <NavLink class="nav-link" href="naryste">
+        <span class="oi oi-clock" aria-hidden="true"></span> Naryste
+    </NavLink>
+</AuthorizeView>
+
 <br />
 <h3>Naujienos</h3>
 <div>
