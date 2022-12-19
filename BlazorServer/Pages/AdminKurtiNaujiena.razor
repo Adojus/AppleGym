@@ -1,10 +1,76 @@
 ﻿@page "/naujienos_kurimas"
 @attribute [Authorize(Roles = "administratorius")]
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using BlazorServer.Authentication
+@inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+
+
 <PageTitle>Kurti naujieną</PageTitle>
 <h1>Kurti naujieną</h1>
 
-<input type="text" class="form-control" placeholder="Pavadinimas"/>
-<textarea class="form-control" placeholder="Tekstas"/>
+<input @bind ="antraste" type="text" class="form-control" placeholder="Antraštė" />
+<textarea @bind="tekstas" class="tekstas" placeholder="Tekstas" />
 
 <a class="btn btn-primary" href="admin" role="button">Kurti</a>
 <a class="btn btn-primary" href="admin" role="button">Atgal</a>
+<button class="btn btn-primary" @onclick="InsertData">Insert</button>
+
+@code{
+    string tekstas = "";
+    string antraste = "";
+    public UserAccount user = new UserAccount();
+    public List<Naudotojas> currentUser;
+
+    public List<AdministratoriaiModel> currentUserAdmin;
+    int adminId = 0;
+
+
+    private async Task InsertData()
+    {
+
+        await OnInitializedAsync();
+
+        await findIdOfAdministratorTable();
+        
+        //adminId = currentUserAdmin.First().fk_Administratoriaiid;
+
+        string sql = "insert into naujienos (tekstas, antraste, fk_Administratoriaiid) values (@tekstas, @antraste, @fk);";
+
+        await _data.SaveData(sql, new { tekstas =tekstas, antraste =antraste, fk = currentUserAdmin.First().Id }, _config.GetConnectionString("default"));
+
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSessionUser();
+        string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+
+        currentUser = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password }, _config.GetConnectionString("default"));
+    }
+
+
+    public async Task GetSessionUser()
+    {
+        user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
+    }
+
+    private async Task findIdOfAdministratorTable()
+    {
+        string sql = "select * from administratoriai where fk_Naudotojaiid = @fk limit 1";
+
+        currentUserAdmin = await _data.LoadData<AdministratoriaiModel, dynamic>(sql, new { fk = user.Id }, _config.GetConnectionString("default"));
+    }
+}

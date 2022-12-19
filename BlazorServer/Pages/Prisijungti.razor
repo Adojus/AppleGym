@@ -74,6 +74,7 @@ Slaptažodis
     public void SetSessionUser(Naudotojas rastasNaudotojas)
     {
         var user = new UserAccount();
+        user.Id = rastasNaudotojas.id;
         user.UserName = rastasNaudotojas.slapyvardis;
         user.Password = rastasNaudotojas.slaptazodis;
         user.Role = rastasNaudotojas.role;
