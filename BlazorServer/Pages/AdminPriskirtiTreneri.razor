@@ -98,9 +98,9 @@ else
 
 
             // DOESNT WORK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! D:<
-            //sql = "insert into treneriai (tabelioNr, issilavinimas, specializacija, fk_Naudotojaiid) values (@tabelioNr, @issilavinimas, @specializacija, @fk);";
+            sql = "insert into treneriai (tabelioNr, issilavinimas, specializacija, fk_Naudotojaiid) values (@tabelioNr, @issilavinimas, @specializacija, @fk);";
 
-            //await _data.SaveData(sql, new { tabelioNr = tabelioNr, issilavinimas = issilavinimas, specializacija = specializacija, fk = tikrinamasPriskiriamasis.id}, _config.GetConnectionString("default"));
+            await _data.SaveData(sql, new { tabelioNr = tabelioNr, issilavinimas = issilavinimas, specializacija = specializacija, fk = tikrinamasPriskiriamasis[0].id}, _config.GetConnectionString("default"));
 
 
 
