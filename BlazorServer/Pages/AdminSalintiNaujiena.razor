@@ -1,5 +1,20 @@
 ﻿@page "/naujienos_salinimas"
 @attribute [Authorize(Roles = "administratorius")]
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+
+@using BlazorServer.Authentication
+@inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+
 <PageTitle>Šalinti naujieną</PageTitle>
 <h1>Šalinti naujieną</h1>
 
@@ -42,3 +57,28 @@
 
 <br/>
 <a class="btn btn-primary" href="admin" role="button">Atgal</a>
+
+
+@code {
+
+    List<PersonModel> people;
+
+
+    private async Task DeleteData()
+    {
+        string sql = "delete from zmones where vardas = @vardas limit 1";
+
+        await _data.SaveData(sql, new { vardas = "jaunius" }, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from zmones";
+
+        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+}
