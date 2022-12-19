@@ -1,46 +1,113 @@
-﻿@page "/priskirti treneri"
+﻿@page "/priskirti_treneri"
 @attribute [Authorize(Roles = "administratorius")]
+@using BlazorServer.Authentication
+@using BlazorServer.Models
+@inject UserAccountService userAccountService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
 <PageTitle>Valdyti Vartotojus</PageTitle>
-<h1>Valdyti Vartotojus</h1>
+<h1>Priskirti Trenerio Statusą</h1>
 
-[vartotoju sąrašas][šalinti vartotoją][priskirti/atimti trenerio statusą]
-<table class="table">
-  <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Vardas Pavardė</th>
-        <th scope="col">Statusas</th>
-        <th scope="col"></th>
-        <th scope="col"></th>
-    </tr>
-  </thead>
+@if (naudotojai == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <label>Būsimo trenerio el. Paštas</label>
+    <input @bind="priskiriamasis.elPastas" type="text" class="form-control" id="name"/>
+    <label>Būsimo trenerio slapyvardis</label>
+    <input @bind="priskiriamasis.slapyvardis" type="text" class="form-control" id="name"/>
+    <label>Tabelio Nr.</label>
+    <input @bind="tabelioNr" type="text" class="form-control" id="name"/>
+    <label>Išsilavinimas</label>
+    <input @bind="issilavinimas" type="text" class="form-control" id="name"/>
+    <label>Specializacija</label>
+    <input @bind="specializacija" type="text" class="form-control" id="name"/>
+    <td><a class="btn btn-warning" role="button" @onclick="PromoteUser">Priskirti</a></td>
 
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Jonas Biliūnas</td>
-      <td>Treneris</td>
-      <td><a class="btn btn-danger" role="button">Šalinti</a></td>
-      <td><a class="btn btn-danger" role="button">Atimti trenerio statusą</a></td>
-    </tr>
-
-    <tr>
-      <th scope="row">2</th>
-      <td>Algirdas Matonis</td>
-      <td>Narys</td>
-      <td><a class="btn btn-danger" role="button">Šalinti</a></td>
-      <td><a class="btn btn-danger" role="button">Priskirti trenerio statusą</a></td>
-    </tr>
-
-    <tr>
-      <th scope="row">3</th>
-      <td>Ponas Pomidoras</td>
-      <td>Narys</td>
-      <td><a class="btn btn-danger" role="button">Šalinti</a></td>
-      <td><a class="btn btn-danger" role="button">Priskirti trenerio statusą</a></td>
-    </tr>
-  </tbody>
-</table>
-
-<br/>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">id</th>
+                <th scope="col">El. Paštas</th>
+                <th scope="col">Slapyvardis</th>
+                <th scope="col">Vardas Pavardė</th>
+                <th scope="col">Role</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{ int i = 1; }
+        @foreach (var p in naudotojai)
+        {
+            
+            <tr>
+                <th scope="row">@i</th>
+                <td>@p.id</td>
+                <td>@p.elPastas</td>
+                <td>@p.slapyvardis</td>
+                <td>@p.vardas @p.pavarde</td>
+                <td>@p.role</td>
+            </tr>
+            i++;
+        }
+        </tbody>    
+    </table>
+}
 <a class="btn btn-primary" href="admin" role="button">Atgal</a>
+
+@code {
+    List<Naudotojas> naudotojai = new List<Naudotojas>();
+
+    Naudotojas priskiriamasis = new Naudotojas();
+    int tabelioNr;
+    string issilavinimas;
+    string specializacija;
+
+
+    List<Naudotojas> tikrinamasPriskiriamasis;
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from naudotojai where role = 'klientas'";
+
+        naudotojai = await _data.LoadData<Naudotojas, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+
+    private async Task PromoteUser()
+    {
+        string sql = "select * from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+
+        tikrinamasPriskiriamasis = await _data.LoadData<Naudotojas, dynamic>(sql, new { elPastas = priskiriamasis.elPastas, slapyvardis = priskiriamasis.slapyvardis }, _config.GetConnectionString("default"));
+
+        if (tikrinamasPriskiriamasis.Count() < 1)
+        {
+            js.InvokeVoidAsync("alert", "Neteisingai įvesti duomenys");
+        }
+        else
+        {
+            sql = "update naudotojai set role = 'treneris' where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+
+            await _data.SaveData(sql, new { elPastas = priskiriamasis.elPastas, slapyvardis = priskiriamasis.slapyvardis}, _config.GetConnectionString("default"));
+
+
+            // DOESNT WORK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! D:<
+            sql = "insert into treneriai (tabelioNr, issilavinimas, specializacija, fk_Naudotojaiid) values (@tabelioNr, @issilavinimas, @specializacija, @fk);";
+
+            await _data.SaveData(sql, new { tabelioNr = tabelioNr, issilavinimas = issilavinimas, specializacija = specializacija, fk = tikrinamasPriskiriamasis[0].id}, _config.GetConnectionString("default"));
+
+
+
+            js.InvokeVoidAsync("alert", "Sėkmingai priskirtas trenerio statusas");
+
+            navManager.NavigateTo("/priskirti_treneri", true);
+        }
+        
+    }
+}

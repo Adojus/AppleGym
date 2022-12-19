@@ -38,8 +38,7 @@ else {
 
 <a class="btn btn-primary" href="profilio_redagavimas" role="button">Redaguoti profili</a>
 <br />
-<a class="btn btn-danger" href="#" role="button">Pašalinti paskyrą</a>
-<a class="btn btn-primary" role="button" @onclick="GetSessionUser">Matyti duomenis</a>
+<a class="btn btn-danger" role="button" @onclick="RemoveUser">Pašalinti paskyrą</a>
 
 @code
 {
@@ -48,10 +47,10 @@ else {
 
     protected override async Task OnInitializedAsync()
     {
-           await GetSessionUser();   
-           string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+        await GetSessionUser();   
+        string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
 
-            people = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
+        people = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
     }
 
 
@@ -64,5 +63,20 @@ else {
     {
         _currentSession.ClearAsync();
         user = new UserAccount();
+    }
+
+    public async Task RemoveUser()
+    {
+        bool confirmed = await js.InvokeAsync<bool>("confirm", "Ar esate įsitikinę?");
+        if (confirmed)
+        {
+            string sql = "delete from naudotojai where slapyvardis = @vardas AND slaptazodis = @slaptazodis limit 1";
+
+            await _data.SaveData(sql, new { vardas = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
+
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            await customAuthStateProvider.UpdateAuthenticationState(null);
+            navManager.NavigateTo("/", true);
+        }
     }
 }

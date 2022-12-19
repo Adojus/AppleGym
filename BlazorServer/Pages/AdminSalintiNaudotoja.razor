@@ -12,7 +12,7 @@
 @inject IDataAccess _data
 @inject IConfiguration _config
 <PageTitle>Valdyti Vartotojus</PageTitle>
-<h1>Valdyti Vartotojus</h1>
+<h1>Šalinti Vartotojus</h1>
 
 @if (naudotojai == null)
 {
@@ -55,6 +55,7 @@ else
         </tbody>    
     </table>
 }
+<a class="btn btn-primary" href="admin" role="button">Atgal</a>
 
 @code {
     List<Naudotojas> naudotojai = new List<Naudotojas>();
