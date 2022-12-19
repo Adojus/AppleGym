@@ -13,10 +13,16 @@
 
     <main>
         <div class="top-row px-4">
+            <AuthorizeView Roles="klientas">
+                <a href="naryste">Narystė</a>
+            </AuthorizeView>
+            <AuthorizeView Roles="administratorius">
+                <a href="admin">Administratoriaus langas</a>
+            </AuthorizeView>
             <AuthorizeView Roles="klientas, administratorius, treneris">
                 <Authorized>
                     <a href="profilis">Mano Profilis</a>
-                    <a @onclick="Atsijungti" href="">atsijungti</a>
+                    <a @onclick="Atsijungti" href="">Atsijungti</a>
                 </Authorized>
                 <NotAuthorized>
                     <a href="prisijungti">Prisijungti</a>
@@ -24,13 +30,9 @@
                 </NotAuthorized>
             </AuthorizeView>
 
-            <AuthorizeView Roles="klientas">
-                <a href="naryste">Narystė</a>
-            </AuthorizeView>
+            
 
-            <AuthorizeView Roles="administratorius">
-                <a href="admin">Administratoriaus langas</a>
-            </AuthorizeView>
+            
             
             
             

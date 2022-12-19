@@ -95,6 +95,7 @@
         //await OnInitializedAsync();
 
         loading = false;
+        await js.InvokeVoidAsync("alert", "Sėkmingai prisiregistruota");
         navManager.NavigateTo("/prisijungti", true);
     }
     private async Task InvalidSubmit()

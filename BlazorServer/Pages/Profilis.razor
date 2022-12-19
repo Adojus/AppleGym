@@ -19,17 +19,20 @@
 <PageTitle>Mano Profilis</PageTitle>
 <h1>Mano Profilis</h1>
 
-@if (user == null)
+@if (user == null || people == null)
 {
     <p>Loading...</p>
 }
 else {
-<p>Slapyvardis:</p>
-<p>@user.UserName</p>
-<p>Slaptažodis:</p>
-<p>@user.Password</p>
-<p>Rolė:</p>
-<p>@user.Role</p>
+<p>Vardas Pavarde: <b>@people[0].vardas @people[0].pavarde</b></p>
+<p>El. Paštas: <b>@people[0].elPastas</b></p>
+<p>Miestas: <b>@people[0].miestas</b></p>
+<p>Pašto kodas: <b>@people[0].pastoKodas</b></p>
+<p>Adresas: <b>@people[0].adresas</b></p>
+<p>Slaptažodis: <b>@people[0].slaptazodis</b></p>
+<p>Lytis: <b>@people[0].lytis</b></p>
+<p><i>Rolė: @user.Role</i></p>
+
 
 }
 
@@ -41,11 +44,17 @@ else {
 @code
 {
     public UserAccount user = new UserAccount();
+    public List<Naudotojas> people;
 
     protected override async Task OnInitializedAsync()
     {
-        await GetSessionUser();
+           await GetSessionUser();   
+           string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+
+            people = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
     }
+
+
     public async Task GetSessionUser()
     {
         user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
@@ -56,6 +65,4 @@ else {
         _currentSession.ClearAsync();
         user = new UserAccount();
     }
-
-
 }
