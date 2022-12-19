@@ -1,16 +1,57 @@
-﻿@page "/treniruotes_laiskas"
+﻿@using System.Net;
+@using System.Net.Mail
+@page "/treniruotes_laiskas"
+@inject IJSRuntime js
 
 <PageTitle>Siųsti laišką</PageTitle>
 <h1>Siųsti laišką</h1>
 
 <label>Gavėjo paštas</label>
-<input type="email" class="form-control" placeholder="gavejas@gmail.com"/>
+<input @bind="recipient" type="email" class="form-control" placeholder="ISPlaboras@outlook.com"/>
 
 <label>Tema</label>
-<input type="text" class="form-control" placeholder="Tema"/>
+<input @bind="subject" type="text" class="form-control" placeholder="Tema"/>
 
 <label>Laiško turinys</label>
-<textarea class="form-control" placeholder="Tekstas"/>
+<textarea @bind="body" class="form-control" placeholder="Tekstas"/>
     
-<a class="btn btn-primary" href="treniruotes_lankytojai" role="button">Siųsti</a>
+<a class="btn btn-primary" href="treniruotes_lankytojai" role="button" @onclick="SendEmail">Siųsti</a>
 <a class="btn btn-primary" href="treniruotes_lankytojai" role="button">Atgal</a>
+
+
+
+@code {
+
+    private int currentCount = 0;
+
+    string recipient = "";
+    string subject = "";
+    string body = "";
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+    private void SendEmail()
+    {
+        string _sender = "ISPlaboras@outlook.com";
+        string _password = "I1S2P3Laboras";
+
+        SmtpClient client = new SmtpClient("smtp-mail.outlook.com");
+
+        client.Port = 587;
+        client.DeliveryMethod = SmtpDeliveryMethod.Network;
+        client.UseDefaultCredentials = false;
+        System.Net.NetworkCredential credentials =
+                    new System.Net.NetworkCredential(_sender, _password);
+        client.EnableSsl = true;
+        client.Credentials = credentials;
+
+        MailMessage message = new MailMessage(_sender, recipient);
+        message.Subject = subject;
+        message.Body = body;
+        client.Send(message);
+        js.InvokeVoidAsync("alert", "Sėkmingai išsiųstas pranešimas");
+    }
+}
