@@ -72,6 +72,7 @@
 
     private Naudotojas model = new Naudotojas();
     bool loading = false;
+    private List<Naudotojas> guy;
 
     private async Task RegisterNewUser()
     {
@@ -91,6 +92,12 @@
             + model.lytis + "');";
 
         await _data.SaveData(sql, new { }, _config.GetConnectionString("default"));
+
+        sql = "select * from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+        guy = await _data.LoadData<Naudotojas, dynamic>(sql, new { elPastas = model.elPastas, slapyvardis = model.slapyvardis }, _config.GetConnectionString("default"));
+
+        sql = "insert into klientai (fk_Naudotojaiid) values (@id);";
+        await _data.SaveData(sql, new { id = guy[0].id}, _config.GetConnectionString("default"));
 
         //await OnInitializedAsync();
 
