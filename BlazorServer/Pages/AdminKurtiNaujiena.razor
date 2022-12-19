@@ -48,7 +48,9 @@
 
         await _data.SaveData(sql, new { tekstas =tekstas, antraste =antraste, fk = currentUserAdmin.First().Id }, _config.GetConnectionString("default"));
 
+        js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
 
+        navManager.NavigateTo("/naujienos_kurimas", true);
     }
 
 
