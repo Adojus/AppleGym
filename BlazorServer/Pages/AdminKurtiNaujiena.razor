@@ -20,11 +20,11 @@
 <h1>Kurti naujieną</h1>
 
 <input @bind ="antraste" type="text" class="form-control" placeholder="Antraštė" />
+<br>
 <textarea @bind="tekstas" class="tekstas" placeholder="Tekstas" />
-
-<a class="btn btn-primary" href="admin" role="button">Kurti</a>
+<br>
 <a class="btn btn-primary" href="admin" role="button">Atgal</a>
-<button class="btn btn-primary" @onclick="InsertData">Insert</button>
+<button class="btn btn-primary" @onclick="InsertData">Kurti</button>
 
 @code{
     string tekstas = "";
@@ -48,7 +48,7 @@
 
         await _data.SaveData(sql, new { tekstas =tekstas, antraste =antraste, fk = currentUserAdmin.First().Id }, _config.GetConnectionString("default"));
 
-        js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
+        js.InvokeVoidAsync("alert", "Sėkmingai sukurta!");
 
         navManager.NavigateTo("/naujienos_kurimas", true);
     }
