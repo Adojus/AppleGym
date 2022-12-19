@@ -1,0 +1,93 @@
+﻿@page "/salinti_naudotojus"
+@attribute [Authorize(Roles = "administratorius")]
+@using BlazorServer.Authentication
+@using BlazorServer.Models
+@inject UserAccountService userAccountService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+
+@using DataLibrary
+@inject IDataAccess _data
+@inject IConfiguration _config
+<PageTitle>Valdyti Vartotojus</PageTitle>
+<h1>Valdyti Vartotojus</h1>
+
+@if (naudotojai == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <label>Šalinamo vartotojo el. Paštas</label>
+    <input @bind="salinamasis.elPastas" type="text" class="form-control" id="name"/>
+    <label>Šalinamo vartotojo slapyvardis</label>
+    <input @bind="salinamasis.slapyvardis" type="text" class="form-control" id="name"/>
+    <td><a class="btn btn-danger" role="button" @onclick="RemoveUser">Šalinti</a></td>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">id</th>
+                <th scope="col">El. Paštas</th>
+                <th scope="col">Slapyvardis</th>
+                <th scope="col">Vardas Pavardė</th>
+                <th scope="col">Role</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{ int i = 1; }
+        @foreach (var p in naudotojai)
+        {
+            
+            <tr>
+                <th scope="row">@i</th>
+                <td>@p.id</td>
+                <td>@p.elPastas</td>
+                <td>@p.slapyvardis</td>
+                <td>@p.vardas @p.pavarde</td>
+                <td>@p.role</td>
+            </tr>
+            i++;
+        }
+        </tbody>    
+    </table>
+}
+
+@code {
+    List<Naudotojas> naudotojai = new List<Naudotojas>();
+
+    Naudotojas salinamasis = new Naudotojas();
+    List<Naudotojas> tikrinamasSalinamasis;
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from naudotojai";
+
+        naudotojai = await _data.LoadData<Naudotojas, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+
+    private async Task RemoveUser()
+    {
+        string sql = "select * from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+
+        tikrinamasSalinamasis = await _data.LoadData<Naudotojas, dynamic>(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis }, _config.GetConnectionString("default"));
+
+        if (tikrinamasSalinamasis.Count() < 1)
+        {
+            js.InvokeVoidAsync("alert", "Neteisingai įvesti duomenys");
+        }
+        else
+        {
+            sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+
+            await _data.SaveData(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis}, _config.GetConnectionString("default"));
+
+            js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
+
+            navManager.NavigateTo("/salinti_naudotojus", true);
+        }
+        
+    }
+}
