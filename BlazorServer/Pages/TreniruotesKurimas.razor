@@ -1,23 +1,98 @@
 ﻿@page "/treniruotes_kurimas"
 
-<PageTitle>Kurti Treniruotę</PageTitle>
-<h1>Kurti Treniruotę</h1>
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
 
-<div class="form-group">
-    <label for="exampleFormControlSelect1">Pasirinkite dieną</label>
-    <select class="form-control" id="exampleFormControlSelect1">
-        <option>Pirmadienis</option>
-        <option>Antradienis</option>
-        <option>Trečiadienis</option>
-        <option>Ketvirtadienis</option>
-        <option>Penktadienis</option>
-        <option>Šeštadienis</option>
-        <option>Sekmadienis</option>
-    </select>
-</div>
-<label>Valanda</label>
-<input type="text" class="form-control" placeholder="pvz. 12:30"/>
-<br/>
 
-<a class="btn btn-primary" href="treniruotes" role="button">Kurti</a>
-<a class="btn btn-primary" href="treneriai" role="button">Atgal</a>
+@using BlazorServer.Authentication
+@inject UserAccountService userAccountService
+@inject Blazored.SessionStorage.ISessionStorageService _currentSession
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+
+
+<PageTitle>Kurti treniruotę</PageTitle>
+<h1>Kurti treniruotę</h1>
+
+
+<EditForm Model="@treniruote">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label>Sporto klubas</label>
+        <InputSelect @bind-Value="treniruote.fk_SportoKlubaiid" class="form-select" required="required">
+            <option value="" >pasirinkite sporto klubą</option>
+            <option value="1">Vyturių g. 7 Kaunas</option>
+            <option value="2">Bananų pr. 99 Vilnius</option>
+        </InputSelect>
+    </div>
+    <div>
+        <label>Data ir laikas </label>
+        <InputText @bind-Value="treniruote.data" class="form-control" placeholder="MMMM-mm-dd h:i:s" />
+    </div>
+    <br />
+    <button class="btn btn-warning" type="submit" @onclick="InsertData">Patvirtinti
+    </button>
+</EditForm>
+<br>
+<a class="btn btn-primary" role="button" href="treniruotes">Atgal</a>
+
+
+@*<button class="btn btn-primary" @onclick="InsertData">Kurti</button>*@
+
+@code {
+    string tekstas = "";
+    string antraste = "";
+    public TreniruoteModel treniruote = new TreniruoteModel();
+    public UserAccount user = new UserAccount();
+    public List<Naudotojas> currentUser;
+
+    public List<AdministratoriaiModel> currentUserAdmin;
+    int adminId = 0;
+
+
+
+    private async Task InsertData()
+    {
+
+        await OnInitializedAsync();
+
+        await findIdOfTrainerTable();
+
+
+        string sql = "insert into treniruotes (data, fk_SportoKlubaiid, fk_Treneriaiid) values (@data, @fk1, @fk2);";
+
+        await _data.SaveData(sql, new { data = treniruote.data, fk1 = treniruote.fk_SportoKlubaiid, fk2 = currentUserAdmin.First().Id }, _config.GetConnectionString("default"));
+
+        js.InvokeVoidAsync("alert", "Sėkmingai sukurta!");
+
+        navManager.NavigateTo("/treniruotes", true);
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSessionUser();
+        string sql = "select * from naudotojai where slapyvardis = @slapyvardis AND slaptazodis = @slaptazodis limit 1";
+
+        currentUser = await _data.LoadData<Naudotojas, dynamic>(sql, new { slapyvardis = user.UserName, slaptazodis = user.Password }, _config.GetConnectionString("default"));
+    }
+
+
+    public async Task GetSessionUser()
+    {
+        user = await _currentSession.GetItemAsync<UserAccount>("SessionUser");
+    }
+
+    private async Task findIdOfTrainerTable()
+    {
+        string sql = "select * from treneriai where fk_Naudotojaiid = @fk limit 1";
+
+        currentUserAdmin = await _data.LoadData<AdministratoriaiModel, dynamic>(sql, new { fk = user.Id }, _config.GetConnectionString("default"));
+    }
+}

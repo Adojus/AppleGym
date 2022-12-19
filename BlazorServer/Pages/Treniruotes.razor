@@ -1,48 +1,60 @@
 ﻿@page "/treniruotes"
 
-<PageTitle>Jono Biliūno Treniruočių Grafikas</PageTitle>
-<h1>Jono Biliūno Treniruočių Grafikas</h1>
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
 
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Diena</th>
-            <th scope="col">Valanda</th>
-            <th scope="col"></th>
-            <th scope="col"></th>
-            <th scope="col"></th>
-        </tr>
-    </thead>
+<h3>Treniruočių sąrašas</h3>
 
-    <tbody>
-        <tr>
-            <th scope="row">1</th>
-            <td>Pirmadienis</td>
-            <td>13:30</td>
-            <td><a class="btn btn-primary" href="treniruotes" role="button">Registruotis</a></td>
-            <td><a class="btn btn-primary" href="treniruotes_lankytojai" role="button">Lankytojai</a></td>
-            <td><a class="btn btn-danger" href="treniruotes" role="button">Atšaukti treniruotę</a></td>
-        </tr>
+<a class="btn btn-primary" href="treniruotes_kurimas" role="button">Sukurti naują treniruotę</a>
 
-        <tr>
-            <th scope="row">2</th>
-            <td>Pirmadienis</td>
-            <td>15:30</td>
-            <td><a class="btn btn-primary" href="treniruotes" role="button">Registruotis</a></td>
-            <td><a class="btn btn-primary" href="treniruotes_lankytojai" role="button">Lankytojai</a></td>
-            <td><a class="btn btn-danger" href="treniruotes" role="button">Atšaukti treniruotę</a></td>
-        </tr>
+@if (treniruotes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
 
-        <tr>
-            <th scope="row">3</th>
-            <td>Antradienis</td>
-            <td>15:30</td>
-            <td><a class="btn btn-primary" href="treniruotes" role="button">Registruotis</a></td>
-            <td><a class="btn btn-primary" href="treniruotes_lankytojai" role="button">Lankytojai</a></td>
-            <td><a class="btn btn-danger" href="treniruotes" role="button">Atšaukti treniruotę</a></td>
-        </tr>
-    </tbody>
-</table>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">ID</th>
+                <th scope="col">Data ir laikas</th>
+                <th scope="col">Dalyvių sk.</th>
+                <th scope="col">Sporto klubas</th>
+                <th scope="col">Treneris</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int i = 1;
+            }
+            @foreach (var t in treniruotes)
+            {
 
-<a class="btn btn-primary" href="treneriai" role="button">Atgal</a>
+                <tr>
+                    <th scope="row">@i</th>
+                    <td>@t.id</td>
+                    <td>@t.data</td>
+                    <td>@t.prisiregistravusiuSk</td>
+                    <td>@t.fk_SportoKlubaiid</td>
+                    <td>@t.fk_Treneriaiid</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+}
+
+@code{
+    List<TreniruoteModel> treniruotes;
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from treniruotes";
+
+        treniruotes = await _data.LoadData<TreniruoteModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+}
