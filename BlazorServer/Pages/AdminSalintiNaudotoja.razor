@@ -62,6 +62,9 @@ else
 
     Naudotojas salinamasis = new Naudotojas();
     List<Naudotojas> tikrinamasSalinamasis;
+    List<Klientas> klientas = new List<Klientas>();
+    List<Narystes> narys = new List<Narystes>();
+    List<TrenerisModel> treneris = new List<TrenerisModel>();
     protected override async Task OnInitializedAsync()
     {
         string sql = "select * from naudotojai";
@@ -81,10 +84,45 @@ else
         }
         else
         {
-            sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+            if (tikrinamasSalinamasis[0].role == "klientas")
+            {
+                sql = "select * from klientai where fk_Naudotojaiid = @id limit 1";
+                klientas = await _data.LoadData<Klientas, dynamic>(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
 
-            await _data.SaveData(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis}, _config.GetConnectionString("default"));
+                sql = "delete from narystes where fk_Klientaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = klientas[0].id }, _config.GetConnectionString("default"));
 
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis}, _config.GetConnectionString("default"));
+            }
+            else if(tikrinamasSalinamasis[0].role == "treneris")
+            {
+                sql = "select * from treneriai where fk_Naudotojaiid = @id limit 1";
+                treneris = await _data.LoadData<TrenerisModel, dynamic>(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
+                
+                sql = "delete from treniruotes where fk_Treneriaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = treneris[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from treneriai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis}, _config.GetConnectionString("default"));
+            }
+            else
+            {
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = tikrinamasSalinamasis[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = salinamasis.elPastas, slapyvardis = salinamasis.slapyvardis}, _config.GetConnectionString("default"));
+            }
             js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
 
             navManager.NavigateTo("/salinti_naudotojus", true);

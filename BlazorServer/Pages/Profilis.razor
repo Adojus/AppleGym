@@ -45,6 +45,10 @@ else {
     public UserAccount user = new UserAccount();
     public List<Naudotojas> people;
 
+    List<Klientas> klientas = new List<Klientas>();
+    List<Narystes> narys = new List<Narystes>();
+    List<TrenerisModel> treneris = new List<TrenerisModel>();
+
     protected override async Task OnInitializedAsync()
     {
         await GetSessionUser();   
@@ -68,11 +72,49 @@ else {
     public async Task RemoveUser()
     {
         bool confirmed = await js.InvokeAsync<bool>("confirm", "Ar esate įsitikinę?");
+        string sql;
         if (confirmed)
         {
-            string sql = "delete from naudotojai where slapyvardis = @vardas AND slaptazodis = @slaptazodis limit 1";
+            if (people[0].role == "klientas")
+            {
+                sql = "select * from klientai where fk_Naudotojaiid = @id limit 1";
+                klientas = await _data.LoadData<Klientas, dynamic>(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
 
-            await _data.SaveData(sql, new { vardas = user.UserName, slaptazodis = user.Password}, _config.GetConnectionString("default"));
+                sql = "delete from narystes where fk_Klientaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = klientas[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = people[0].elPastas, slapyvardis = people[0].slapyvardis}, _config.GetConnectionString("default"));
+            }
+            else if(people[0].role == "treneris")
+            {
+                sql = "select * from treneriai where fk_Naudotojaiid = @id limit 1";
+                treneris = await _data.LoadData<TrenerisModel, dynamic>(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
+                
+                sql = "delete from treniruotes where fk_Treneriaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = treneris[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from treneriai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = people[0].elPastas, slapyvardis = people[0].slapyvardis}, _config.GetConnectionString("default"));
+            }
+            else
+            {
+                sql = "delete from klientai where fk_Naudotojaiid = @id limit 1";
+                await _data.SaveData(sql, new { @id = people[0].id }, _config.GetConnectionString("default"));
+
+                sql = "delete from naudotojai where elPastas = @elPastas AND slapyvardis = @slapyvardis limit 1";
+                await _data.SaveData(sql, new { elPastas = people[0].elPastas, slapyvardis = people[0].slapyvardis}, _config.GetConnectionString("default"));
+            }
+            js.InvokeVoidAsync("alert", "Sėkmingai pašalinta");
 
             var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(null);
